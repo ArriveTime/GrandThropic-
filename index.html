@@ -328,14 +328,25 @@
 
   </main>
 
-  <!-- Footer -->
+  <!-- Footer with Live Public Visitor Counter -->
   <footer class="border-t border-zinc-800/80 bg-zinc-950 py-6 mt-12">
-    <div class="max-w-5xl mx-auto px-4 flex flex-col sm:flex-row items-center justify-between gap-4 text-xs text-zinc-500">
-      <div>
-        &copy; <span id="year"></span> GrandThropic.com — Independent Event Tracker. Not affiliated with Anthropic PBC or Rockstar Games / Take-Two Interactive.
+    <div class="max-w-5xl mx-auto px-4 space-y-4">
+      <div class="flex flex-col sm:flex-row items-center justify-between gap-4 text-xs text-zinc-500">
+        <div>
+          &copy; <span id="year"></span> GrandThropic.com — Independent Event Tracker. Not affiliated with Anthropic PBC or Rockstar Games / Take-Two Interactive.
+        </div>
+        <div class="font-semibold text-zinc-300">
+          To purchase GrandThropic.com contact us at <a href="mailto:ALL4AIM@hotmail.com?subject=GrandThropic.com%20Purchase%20Inquiry" class="text-amber-400 hover:underline mono">ALL4AIM@hotmail.com</a>
+        </div>
       </div>
-      <div class="font-semibold text-zinc-300">
-        To purchase GrandThropic.com contact us at <a href="mailto:ALL4AIM@hotmail.com?subject=GrandThropic.com%20Purchase%20Inquiry" class="text-amber-400 hover:underline mono">ALL4AIM@hotmail.com</a>
+
+      <!-- Public Visitor Counter Bar -->
+      <div class="pt-3 border-t border-zinc-900 flex items-center justify-center">
+        <div class="inline-flex items-center gap-2.5 bg-zinc-900/90 border border-zinc-800 px-4 py-1.5 rounded-full text-xs">
+          <span class="inline-block w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
+          <span class="text-zinc-400 uppercase tracking-wider font-semibold text-[11px]">Total Page Visitors:</span>
+          <span id="visitorCount" class="mono font-bold text-white">0</span>
+        </div>
       </div>
     </div>
   </footer>
@@ -436,7 +447,29 @@
 
     renderPoll();
 
-    // 4. One-Click Share Button
+    // 4. Live Public Visitor Counter (Starts at 0, shared globally via CounterAPI)
+    async function updateVisitorCounter() {
+      const counterEl = document.getElementById("visitorCount");
+      const namespace = "grandthropic-com-live-tracker";
+      const key = "page-visits-v1";
+
+      try {
+        const response = await fetch(`https://api.counterapi.dev/v1/${namespace}/${key}/up`);
+        if (!response.ok) throw new Error("Counter API unavailable");
+        const data = await response.json();
+        const count = typeof data.count === "number" ? data.count : 0;
+        counterEl.textContent = count.toLocaleString();
+      } catch (err) {
+        // Fallback to local browser counter if an ad blocker blocks external API calls
+        let localCount = parseInt(localStorage.getItem("grandthropic_local_visits") || "0", 10) + 1;
+        localStorage.setItem("grandthropic_local_visits", String(localCount));
+        counterEl.textContent = localCount.toLocaleString();
+      }
+    }
+
+    updateVisitorCounter();
+
+    // 5. One-Click Share Button
     document.getElementById("shareBtn").addEventListener("click", async () => {
       const shareData = {
         title: "GrandThropic.com — Anthropic IPO vs. GTA VI",
